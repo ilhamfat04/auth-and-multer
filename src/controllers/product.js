@@ -2,6 +2,12 @@ const { product, user, category, productCategory } = require("../../models");
 
 exports.getProduct = async (req, res) => {
   try {
+    // res.send({
+    //   user: {
+    //     id: req.user.id,
+    //     email: req.user.email
+    //   }
+    // })
     const data = await product.findAll({
       include: [
         {
