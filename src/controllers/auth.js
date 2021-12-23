@@ -5,6 +5,7 @@ const { user } = require("../../models");
 const Joi = require("joi");
 
 // import package here
+const bcrypt = require("bcrypt")
 
 exports.register = async (req, res) => {
   // our validation schema here
@@ -12,6 +13,7 @@ exports.register = async (req, res) => {
     name: Joi.string().min(5).required(),
     email: Joi.string().email().min(6).required(),
     password: Joi.string().min(6).required(),
+    status: Joi.string().required()
   });
 
   // do validation and get error object from schema.validate
@@ -27,11 +29,18 @@ exports.register = async (req, res) => {
 
   try {
     // code here
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(req.body.password, salt)
+
+    // return res.send({
+    //   hashedPassword
+    // })
 
     const newUser = await user.create({
       name: req.body.name,
       email: req.body.email,
       password: hashedPassword,
+      status: req.body.status
     });
 
     res.status(200).send({
@@ -71,13 +80,21 @@ exports.login = async (req, res) => {
   try {
     const userExist = await user.findOne({
       where: {
-        email: req.body.email,
+        email: req.body.email
       },
       attributes: {
         exclude: ["createdAt", "updatedAt"],
       },
     });
     // code here
+    const isValid = await bcrypt.compare(req.body.password, userExist.password)
+
+    if (!isValid) {
+      return res.status(400).send({
+        status: "failed",
+        message: "Email or password doenst match"
+      })
+    }
 
     res.status(200).send({
       status: "success...",
